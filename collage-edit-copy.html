@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,12 +33,53 @@
             margin-top: 10px;
         }
 
-	#collageContainer {
-    		padding: 0;
-    		margin: 0;
-	}
+        #collageContainer {
+            padding: 0;
+            margin: 0;
+        }
 
+        /* New styles for content container */
+        .content-container {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
 
+        .content-container.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Style for confirm button */
+        #confirmButton {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #confirmButton:hover {
+            background-color: #0056b3;
+        }
+
+        /* New styles for edit section */
+        .edit-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            opacity: 0;
+        }
+
+        .edit-section.visible {
+            max-height: 1000px;
+            opacity: 1;
+            transition: max-height 0.5s ease-in, opacity 0.3s ease-in;
+        }
     </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -50,44 +90,50 @@
 
 <iframe id="captureIframe" src="select_capture.html" name="iframe_a" height="1000px" width="100%" title="Iframe Example"></iframe>
 
-<!-- Create a container for the collage and footer -->
-<div id="collageContainer">
-    <div id="tableContainer"></div>
-    <div id="footerContainer" class="footer"></div>
-</div>
+<!-- Wrap all content except iframe in a container -->
+<div class="content-container" id="contentContainer">
+    <!-- Create a container for the collage and footer -->
+    <div id="collageContainer">
+        <div id="tableContainer"></div>
+        <div id="footerContainer" class="footer"></div>
+    </div>
 
-<label>Width: <input type="number" id="canvasWidth" value="100"></label>
-<label>Height: <input type="number" id="canvasHeight" value="100"></label>
-<br>
-<label>Background Color: <input type="color" id="bgColor" value="#ffffff"></label>
-<br>
-<label>Border Color: <input type="color" id="borderColor" value="#000000"></label>
-<label>Border Style:
-    <select id="borderStyle">
-        <option value="solid">Solid</option>
-        <option value="dotted">Dotted</option>
-        <option value="dashed">Dashed</option>
-    </select>
-</label>
-<br>
-<label>Border Thickness: <input type="number" id="borderWidth" value="1"></label>
-<br>
-<button id="resetSettings">Reset</button>
-<br>
+    <a id="confirmButton" href="#">Confirm Collage</a>
 
-<div class="footer-form">
-    <input type="text" id="footerText" placeholder="Type your text here">
-    <select id="fontSelect">
-        <option value="Arial">Arial</option>
-        <option value="Courier New">Courier New</option>
-        <option value="Georgia">Georgia</option>
-        <option value="Times New Roman">Times New Roman</option>
-        <option value="Verdana">Verdana</option>
-    </select>
-    <button id="updateFooter">Update Footer</button>
+    <!-- Edit section -->
+    <div class="edit-section" id="editSection">
+        <label>Width: <input type="number" id="canvasWidth" value="100"></label>
+        <label>Height: <input type="number" id="canvasHeight" value="100"></label>
+        <br>
+        <label>Background Color: <input type="color" id="bgColor" value="#ffffff"></label>
+        <br>
+        <label>Border Color: <input type="color" id="borderColor" value="#000000"></label>
+        <label>Border Style:
+            <select id="borderStyle">
+                <option value="solid">Solid</option>
+                <option value="dotted">Dotted</option>
+                <option value="dashed">Dashed</option>
+            </select>
+        </label>
+        <br>
+        <label>Border Thickness: <input type="number" id="borderWidth" value="1"></label>
+        <br>
+        <button id="resetSettings">Reset</button>
+        <br>
+
+        <div class="footer-form">
+            <input type="text" id="footerText" placeholder="Type your text here">
+            <select id="fontSelect">
+                <option value="Arial">Arial</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Verdana">Verdana</option>
+            </select>
+            <button id="updateFooter">Update Footer</button>
+        </div>
+    </div>
 </div>
-<br>
-<a id="confirmButton" href="#">Confirm Collage</a>
 
 <script>
     //alert("collage-edit.html loaded");
@@ -117,19 +163,14 @@
             capturedImages = event.data.images; // Update the stored image URLs
             drawImagesInCells(); // Draw images immediately after receiving
 
-	    // Hide the iframe after receiving the images
+            // Hide the iframe and show the content container
             const iframe = document.getElementById('captureIframe');
             iframe.style.display = 'none'; // Hide the iframe
+            
+            // Show the content container
+            document.getElementById('contentContainer').classList.add('visible');
         }
     });
-
-
-
-
-    
-
-
-
 
     // Create the table of canvases based on row and col parameters
     function createCollage() {
@@ -215,10 +256,7 @@
         }
     }
 
-
-
-
-// Dynamically update the canvas properties based on input
+    // Dynamically update the canvas properties based on input
     function updateCanvasProperties() {
         const width = parseInt(document.getElementById('canvasWidth').value) || 100;
         const height = parseInt(document.getElementById('canvasHeight').value) || 100;
@@ -238,21 +276,13 @@
         drawImagesInCells(); // Restore images after applying settings
     }
 
- // Event listeners for dynamic updates
+    // Event listeners for dynamic updates
     document.getElementById('canvasWidth').addEventListener('input', updateCanvasProperties);
     document.getElementById('canvasHeight').addEventListener('input', updateCanvasProperties);
     document.getElementById('bgColor').addEventListener('input', updateCanvasProperties);
     document.getElementById('borderColor').addEventListener('input', updateCanvasProperties);
     document.getElementById('borderStyle').addEventListener('change', updateCanvasProperties);
     document.getElementById('borderWidth').addEventListener('input', updateCanvasProperties);
-
-
-
-
-
-
-
-    
 
     document.getElementById('resetSettings').addEventListener('click', () => {
         document.querySelectorAll('canvas').forEach(canvas => {
@@ -266,33 +296,23 @@
 	updateFooterCanvas();
     });
 
-
     const confirmButton = document.getElementById('confirmButton');
 
     confirmButton.addEventListener('click', (event) => {
         event.preventDefault();
-        //alert("Confirm button clicked, capturing collage");
+        // Adjust collage container size before capturing
+        const collageContainer = document.getElementById('collageContainer');
 
-	// Adjust collage container size before capturing
-    	const collageContainer = document.getElementById('collageContainer');
-
-	// Update the width and height of the collage container
-	const borderWidth = parseInt(document.getElementById('borderWidth').value) || 1;
-	//if(cols==1) cols=2;
-	//if(rows==1) rows=2; //to make collageContainer.style.width and height not 0 , since cols-1
-
-
-	const canvas_width = parseInt(document.getElementById('canvasWidth').value);
-	const canvas_height = parseInt(document.getElementById('canvasHeight').value);
-	
-
-	collageContainer.style.width = `${(cols * canvas_width) + (2 * borderWidth * cols)}px`;
-	collageContainer.style.height = `${(rows * canvas_height) + (2 * borderWidth * rows) + 100 + (2 * borderWidth)}px`;
-
+        // Update the width and height of the collage container
+        const borderWidth = parseInt(document.getElementById('borderWidth').value) || 1;
+        const canvas_width = parseInt(document.getElementById('canvasWidth').value);
+        const canvas_height = parseInt(document.getElementById('canvasHeight').value);
+        
+        collageContainer.style.width = `${(cols * canvas_width) + (2 * borderWidth * cols)}px`;
+        collageContainer.style.height = `${(rows * canvas_height) + (2 * borderWidth * rows) + 100 + (2 * borderWidth)}px`;
 
         html2canvas(document.querySelector("#collageContainer")).then(canvas => {
             const collageDataUrl = canvas.toDataURL("image/png");
-            //alert("Collage with footer captured, saving to localStorage");
 
             // Save the collage data URL to localStorage
             localStorage.setItem("collageData", collageDataUrl);
@@ -301,13 +321,6 @@
             window.location.href = "photo.html";
         });
     });
-
-
-
-
-
-
-
 
     createCollage();
 </script>
