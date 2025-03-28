@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+
+body
+{
+ padding: 10px;
+ //border-style: double;
+ border-width: 10px;
+ border-color: black;
+ align: center;
+}
+
+
+
+	.option {
+		height: 150px;
+		width: 150px;
+		display: inline-block;
+		background-color: black;
+		border-radius: 9px;
+		border-style: double;
+		border-width: 8px;
+		border-color: white;
+		text-align: center;
+		
+		padding: 10px;
+		margin: 10px;
+		color: white;
+		transition: height 0.5s ease, width 0.5s ease;
+	}
+	.option:hover {
+		height: 170px;
+		width: 170px;
+	}
+	.option:active {
+		background-color: grey;
+	}
+</style>
+</head>
+
+<body>
+<h1>Select a Custom Collage </h1>
+<div id="collage1" class="option" >Collage 1 <br>-2row 1col</div> 
+<div id="collage2" class="option">Collage 2 <br>-3row 2col</div>
+<div id="collage3" class="option">Collage 3 <br>-2row 3col</div>
+<div id="collage4" class="option">Collage 4 <br>-3row 3col</div>
+<br><br><br><br><br><br>
+
+<hr>
+<h1> Select a prop </h1>
+<div class="option"> Retro </div><br>
+<div class="option"> Instagram </div><br>
+<div class="option"> Poloroid </div> <hr>
+
+
+<script>
+	// Add event listener to the collage 1 option
+	document.getElementById('collage1').addEventListener('click', function() {
+		// Redirect to edit-collage.html with row and col parameters
+		window.location.href = 'collage-edit-copy.html?row=2&col=1';
+	});
+
+
+	document.getElementById('collage2').addEventListener('click', function() {
+		// Redirect to edit-collage.html with row and col parameters
+		window.location.href = 'collage-edit-copy.html?row=3&col=2';
+	});
+
+
+	document.getElementById('collage3').addEventListener('click', function() {
+		// Redirect to edit-collage.html with row and col parameters
+		window.location.href = 'collage-edit-copy.html?row=2&col=3';
+	});
+
+
+	document.getElementById('collage4').addEventListener('click', function() {
+		// Redirect to edit-collage.html with row and col parameters
+		window.location.href = 'collage-edit-copy.html?row=3&col=3';
+	});
+
+
+</script>
+</body>
+</html>

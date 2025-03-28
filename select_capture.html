@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth Capture with Timer</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+        }
+        #video, #previewImage {
+            max-width: 100%;
+            width: 450px;
+            height: 450px;
+            object-fit: cover;
+        }
+        .button-container {
+            margin-top: 10px;
+        }
+        #finalOptions {
+            display: none;
+        }
+        #capturedImagesContainer img {
+            margin: 5px;
+        }
+        .capturedImageWrapper {
+            display: inline-block;
+            text-align: center;
+            margin: 10px;
+        }
+        #countdown {
+            font-size: 36px;
+            color: red;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Photobooth</h1>
+    <div>
+        
+        <!-- Timer selection dropdown -->
+        <label for="timerSelect">Set Timer:</label>
+        <select id="timerSelect">
+            <option value="3">3 seconds</option>
+            <option value="5">5 seconds</option>
+            <option value="10">10 seconds</option>
+        </select>
+	<br><br>
+        <video id="video" autoplay></video><br>
+        <img id="previewImage" style="display:none;">
+        <div id="countdown"></div> <!-- Countdown display -->
+        <button id="captureButton">Capture Image</button>
+    </div>
+    <br>
+
+    <div class="button-container" id="confirmationButtons" style="display: none;">
+        <button id="yesButton">Yes</button>
+        <button id="noButton">No</button>
+    </div>
+
+    <div id="finalOptions">
+        <h2>All images captured. Confirm or Retake?</h2>
+        <button id="confirmAllButton">Confirm</button>
+        <button id="retakeAllButton">Retake All</button>
+    </div>
+
+    <h2>Captured Images</h2>
+    <div id="capturedImagesContainer"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const picsCount = parseInt(urlParams.get('pics'));
+        const capturedImages = [];
+        let currentPic = 0;
+        
+
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((error) => {
+                console.error("Error accessing webcam:", error);
+            });
+
+        const captureButton = document.getElementById('captureButton');
+        const previewImage = document.getElementById('previewImage');
+        
+        const finalOptions = document.getElementById('finalOptions');
+        const capturedImagesContainer = document.getElementById('capturedImagesContainer');
+        const timerSelect = document.getElementById('timerSelect');
+        const countdown = document.getElementById('countdown'); // Countdown element
+        const canvas = document.createElement('canvas');
+
+        function captureImage() {
+            const delay = parseInt(timerSelect.value);
+            let currentCaptureIndex = 0;
+
+            captureButton.disabled = true;
+
+	    function captureNext() {
+	     if(currentCaptureIndex >= picsCount)
+	     { 
+		captureButton.style.display ='none';
+		finalOptions.style.display = 'block';
+		return;
+	     }
+	    
+
+	    let countdownValue = delay;
+            countdown.style.display = 'block'; // Show countdown
+            countdown.innerText = countdownValue;
+
+            const countdownInterval = setInterval(() => {
+                countdownValue -= 1;
+                countdown.innerText = countdownValue;
+
+                if (countdownValue <= 0) {
+                    clearInterval(countdownInterval);
+                    countdown.style.display = 'none'; // Hide countdown
+
+		    //capture the image
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageDataUrl = canvas.toDataURL('image/png');
+		    capturedImages.push(imageDataUrl);
+		    addCapturedImage(imageDataUrl,currentCaptureIndex);
+
+		    currentCaptureIndex++;
+		    captureNext();  //recursive call for next capture
+		    }
+		  }, 1000);
+		}
+
+                 captureNext(); //start first capture
+		}
+
+
+
+
+
+
+
+
+        function addCapturedImage(src, index) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('capturedImageWrapper');
+
+            const img = document.createElement('img');
+            img.src = src;
+            img.width = 100;
+            img.height = 80;
+            wrapper.appendChild(img);
+
+            capturedImagesContainer.appendChild(wrapper);
+        }
+
+
+
+function resetCaptureView() {
+    capturedImages.length = 0; // Clear captured images array
+    currentPic = 0; // Reset current picture index
+    capturedImagesContainer.innerHTML = ''; // Clear captured images display
+    finalOptions.style.display = 'none'; // Hide final options
+    captureButton.style.display = 'block'; // Show the capture button
+    captureButton.disabled = false; // Re-enable the capture button
+    alert("Retake all images.");
+}
+
+
+
+function confirmAllImages() {
+    document.body.innerHTML = ''; // Clear the entire webpage
+    alert("Images confirmed!");
+    window.parent.postMessage({ images: capturedImages }, '*');
+}
+
+
+
+
+        captureButton.addEventListener('click', captureImage);
+
+        document.getElementById('confirmAllButton').addEventListener('click',  confirmAllImages);
+
+        document.getElementById('retakeAllButton').addEventListener('click', resetCaptureView);
+
+    </script>
+</body>
+</html>

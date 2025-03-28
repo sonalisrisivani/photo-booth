@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Print Image</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .image-container {
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="image-container">
+        <h2>Image to Print</h2>
+        <img id="printImg" src="" alt="Image to print">
+        <br>
+        <button onclick="window.print()">Print Image</button>
+    </div>
+
+    <script>
+        // Retrieve the image from localStorage
+        const printImg = document.getElementById("printImg");
+        const collageData = localStorage.getItem("collageData");
+
+        if (collageData) {
+            printImg.src = collageData;
+        } else {
+            printImg.alt = "No image available for printing.";
+        }
+    </script>
+</body>
+</html>

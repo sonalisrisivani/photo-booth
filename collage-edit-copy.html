@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Collage with Editable Footer</title>
+    <style>
+        .row {
+            display: flex;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin: 0;
+        }
+        .footer {
+            display: flex;
+            margin-top: 0px;
+        }
+        .footer-form {
+            display: flex;
+            margin-top: 0px;
+        }
+        .footer-form input, .footer-form select {
+            margin: 5px;
+        }
+        .canvas-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .button-container {
+            margin-top: 10px;
+        }
+
+	#collageContainer {
+    		padding: 0;
+    		margin: 0;
+	}
+
+
+    </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<h1>Dynamic Collage with Editable Footer</h1>
+
+<iframe id="captureIframe" src="select_capture.html" name="iframe_a" height="1000px" width="100%" title="Iframe Example"></iframe>
+
+<!-- Create a container for the collage and footer -->
+<div id="collageContainer">
+    <div id="tableContainer"></div>
+    <div id="footerContainer" class="footer"></div>
+</div>
+
+<label>Width: <input type="number" id="canvasWidth" value="100"></label>
+<label>Height: <input type="number" id="canvasHeight" value="100"></label>
+<br>
+<label>Background Color: <input type="color" id="bgColor" value="#ffffff"></label>
+<br>
+<label>Border Color: <input type="color" id="borderColor" value="#000000"></label>
+<label>Border Style:
+    <select id="borderStyle">
+        <option value="solid">Solid</option>
+        <option value="dotted">Dotted</option>
+        <option value="dashed">Dashed</option>
+    </select>
+</label>
+<br>
+<label>Border Thickness: <input type="number" id="borderWidth" value="1"></label>
+<br>
+<button id="resetSettings">Reset</button>
+<br>
+
+<div class="footer-form">
+    <input type="text" id="footerText" placeholder="Type your text here">
+    <select id="fontSelect">
+        <option value="Arial">Arial</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Verdana">Verdana</option>
+    </select>
+    <button id="updateFooter">Update Footer</button>
+</div>
+<br>
+<a id="confirmButton" href="#">Confirm Collage</a>
+
+<script>
+    //alert("collage-edit.html loaded");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const rows = parseInt(urlParams.get('row')) || 1;
+    const cols = parseInt(urlParams.get('col')) || 1;
+
+    const tableContainer = document.getElementById('tableContainer');
+    const footerContainer = document.getElementById('footerContainer');
+    const footerCanvas = document.createElement('canvas');
+    const footerTextInput = document.getElementById('footerText');
+    const fontSelect = document.getElementById('fontSelect');
+    const updateFooterButton = document.getElementById('updateFooter');
+
+    let capturedImages = []; // Store the captured image URLs
+
+    // Set the iframe src with calculated pics
+    const pics = rows * cols;
+    const iframe = document.getElementById('captureIframe');
+    iframe.src = `select_capture.html?pics=${pics}`;
+
+    // Listen for the message from the iframe
+    window.addEventListener('message', (event) => {
+        alert("Message received in collage-edit.html");
+        if (event.data && event.data.images) {
+            capturedImages = event.data.images; // Update the stored image URLs
+            drawImagesInCells(); // Draw images immediately after receiving
+
+	    // Hide the iframe after receiving the images
+            const iframe = document.getElementById('captureIframe');
+            iframe.style.display = 'none'; // Hide the iframe
+        }
+    });
+
+
+
+
+    
+
+
+
+
+    // Create the table of canvases based on row and col parameters
+    function createCollage() {
+        //alert("Creating collage");
+        tableContainer.innerHTML = '';  
+        footerContainer.innerHTML = '';
+
+	const canvasWidth = parseInt(document.getElementById('canvasWidth').value) || 100;
+	const canvasHeight = parseInt(document.getElementById('canvasHeight').value) || 100;
+	const borderWidth = parseInt(document.getElementById('borderWidth').value) || 1;
+
+        for (let i = 0; i < rows; i++) {
+            const rowDiv = document.createElement('div');
+            rowDiv.classList.add('row');
+            for (let j = 0; j < cols; j++) {
+                const cellCanvas = document.createElement('canvas');
+                cellCanvas.width = 100;
+                cellCanvas.height = 100;
+                cellCanvas.id = `cell-${i}-${j}`;
+                rowDiv.appendChild(cellCanvas);
+            }
+            tableContainer.appendChild(rowDiv);
+        }
+
+        footerContainer.appendChild(footerCanvas);
+        updateFooterWidth();
+        updateFooterCanvas();
+    }
+
+    // Update footer width to match collage
+    function updateFooterWidth() {
+        const canvasWidth = parseInt(document.getElementById('canvasWidth').value) || 100;
+        const borderWidth = parseInt(document.getElementById('borderWidth').value) || 1;
+        const collageWidth = (cols * canvasWidth) + (2*borderWidth * (cols - 1));
+        
+        footerCanvas.width = collageWidth;
+        footerCanvas.height = 100;
+    }
+
+    // Update footer canvas with custom text and font
+    updateFooterButton.addEventListener('click', updateFooterCanvas);
+
+    function updateFooterCanvas() {
+        const ctx = footerCanvas.getContext('2d');
+        ctx.clearRect(0, 0, footerCanvas.width, footerCanvas.height);
+
+        const text = footerTextInput.value.trim();
+        const font = fontSelect.value;
+
+        ctx.font = `20px ${font}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        if (text) {
+            ctx.fillText(text, footerCanvas.width / 2, footerCanvas.height / 2);
+        }
+
+        drawImagesInCells(); // Draw images in cells as well
+    }
+
+    function drawImagesInCells() {
+        //alert("Drawing images in cells");
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                const cellCanvas = document.getElementById(`cell-${i}-${j}`);
+                const ctx = cellCanvas.getContext('2d');
+
+                const imgUrl = capturedImages[i * cols + j]; // Use stored image URL
+
+                ctx.clearRect(0, 0, cellCanvas.width, cellCanvas.height);
+
+                if (imgUrl) {
+                    const img = new Image();
+                    img.src = imgUrl;
+                    img.onload = () => {
+                        ctx.drawImage(img, 0, 0, cellCanvas.width, cellCanvas.height);
+                    };
+                    img.onerror = () => {
+                        console.error(`Failed to load image from URL: ${imgUrl}`);
+                    };
+                }
+            }
+        }
+    }
+
+
+
+
+// Dynamically update the canvas properties based on input
+    function updateCanvasProperties() {
+        const width = parseInt(document.getElementById('canvasWidth').value) || 100;
+        const height = parseInt(document.getElementById('canvasHeight').value) || 100;
+        const bgColor = document.getElementById('bgColor').value;
+        const borderColor = document.getElementById('borderColor').value;
+        const borderStyle = document.getElementById('borderStyle').value;
+        const borderWidth = parseInt(document.getElementById('borderWidth').value) || 1;
+
+        document.querySelectorAll('canvas').forEach(canvas => {
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.backgroundColor = bgColor;
+            canvas.style.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
+        });
+
+        updateFooterWidth();
+        drawImagesInCells(); // Restore images after applying settings
+    }
+
+ // Event listeners for dynamic updates
+    document.getElementById('canvasWidth').addEventListener('input', updateCanvasProperties);
+    document.getElementById('canvasHeight').addEventListener('input', updateCanvasProperties);
+    document.getElementById('bgColor').addEventListener('input', updateCanvasProperties);
+    document.getElementById('borderColor').addEventListener('input', updateCanvasProperties);
+    document.getElementById('borderStyle').addEventListener('change', updateCanvasProperties);
+    document.getElementById('borderWidth').addEventListener('input', updateCanvasProperties);
+
+
+
+
+
+
+
+    
+
+    document.getElementById('resetSettings').addEventListener('click', () => {
+        document.querySelectorAll('canvas').forEach(canvas => {
+            canvas.width = 100;
+            canvas.height = 100;
+            canvas.style.backgroundColor = '#ffffff';
+            canvas.style.border = '1px solid #000';
+        });
+
+        updateFooterWidth();
+	updateFooterCanvas();
+    });
+
+
+    const confirmButton = document.getElementById('confirmButton');
+
+    confirmButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        //alert("Confirm button clicked, capturing collage");
+
+	// Adjust collage container size before capturing
+    	const collageContainer = document.getElementById('collageContainer');
+
+	// Update the width and height of the collage container
+	const borderWidth = parseInt(document.getElementById('borderWidth').value) || 1;
+	//if(cols==1) cols=2;
+	//if(rows==1) rows=2; //to make collageContainer.style.width and height not 0 , since cols-1
+
+
+	const canvas_width = parseInt(document.getElementById('canvasWidth').value);
+	const canvas_height = parseInt(document.getElementById('canvasHeight').value);
+	
+
+	collageContainer.style.width = `${(cols * canvas_width) + (2 * borderWidth * cols)}px`;
+	collageContainer.style.height = `${(rows * canvas_height) + (2 * borderWidth * rows) + 100 + (2 * borderWidth)}px`;
+
+
+        html2canvas(document.querySelector("#collageContainer")).then(canvas => {
+            const collageDataUrl = canvas.toDataURL("image/png");
+            //alert("Collage with footer captured, saving to localStorage");
+
+            // Save the collage data URL to localStorage
+            localStorage.setItem("collageData", collageDataUrl);
+
+            // Open photo-confirm.html
+            window.location.href = "photo.html";
+        });
+    });
+
+
+
+
+
+
+
+
+    createCollage();
+</script>
+
+</body>
+</html>
+
+
+
+
+
